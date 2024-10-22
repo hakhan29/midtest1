@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #gameStart {
+            position: absolute;
+            padding: 10px 20px;
+            font-size: 24px;
+            cursor: pointer;
+            right: 20px;
+            bottom: 50%;
+            transform: translateY(50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            z-index: 10; 
+        }
+
+        #gameCanvas {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('bg_1.png');
+        }
+
+        #imageSequence {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 1s; 
+            z-index: 20; 
+        }
+
+        #character {
+            position: absolute;
+            width: 300px; 
+            height: 300px; 
+            background: url('Chara_1.png') no-repeat;
+            background-size: contain;
+            left: calc(50% - 150px);
+            bottom: 50px; 
+            z-index: 10;   
+        }
+
+        #interaction, #interaction2, #interaction3 {
+            position: absolute;
+            width: 150px; 
+            height: 150px; 
+            background-image: url('inst_1.png');  
+            background-size: contain;
+            z-index: 9;
+        }
+
+        #interaction {
+            bottom: 300px; 
+            left: 600px;
+        }
+
+        #interaction2 {
+            bottom: 500px; 
+            left: 500px;
+        }
+
+        #interaction3 {
+            bottom: 650px; 
+            left: 1000px;
+        }
+
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: url('ground.png') repeat-x;
+            z-index: 1;
+        }
+
+       
+        #restartButton {
+            display: none;
+            position: absolute;
+            padding: 10px 20px;
+            font-size: 24px;
+            cursor: pointer;
+            right: 50%;
+            bottom: 50%;
+            transform: translate(50%, 50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            z-index: 25; 
+        }
+
+    </style>
+</head>
+<body>
+
+    <button id="gameStart">Game Start</button>
+
+    <div id="gameCanvas">
+        <img id="imageSequence" />
+        <div id="character"></div>
+        <div id="interaction"></div>
+        <div id="interaction2"></div>
+        <div id="interaction3"></div>
+        <div id="ground"></div>
+    </div>
+
+    <button id="restartButton">Restart</button>
+
+    <audio id="bgMusic1" src="song_1.mp3" loop></audio>
+    <audio id="bgMusic2" src="song_2.mp3" loop></audio>
+    <audio id="bgMusicBackground" src="bg.mp3" loop></audio> 
+
+    <script>
+       
+        const gameStartButton = document.getElementById('gameStart');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const imageSequence = document.getElementById('imageSequence');
+        const character = document.getElementById('character');
+        const interaction = document.getElementById('interaction');
+        const interaction2 = document.getElementById('interaction2');
+        const interaction3 = document.getElementById('interaction3');
+        const bgMusic1 = document.getElementById('bgMusic1');
+        const bgMusic2 = document.getElementById('bgMusic2');
+        const bgMusicBackground = document.getElementById('bgMusicBackground'); 
+        const restartButton = document.getElementById('restartButton');
+        let currentVolume = 0;
+
+      
+        bgMusic1.volume = currentVolume;
+        bgMusic2.volume = currentVolume;
+        bgMusicBackground.volume = 1.0; 
+
+       
+        const images = ['img1.png', 'img2.png', 'img3.png', 'img4.png', 'img5.png'];
+        let currentImageIndex = 0;
+
+       
+        let charX = window.innerWidth / 2 - 150; 
+        let charY = window.innerHeight - 350;
+        const speed = 10;
+
+        let canInteract = false;
+
+      
+        let onGround = true;
+
+     
+        gameStartButton.addEventListener('click', () => {
+            gameStartButton.style.display = 'none';
+            gameCanvas.style.display = 'block';
+            imageSequence.style.display = 'block';
+
+            bgMusicBackground.play(); 
+            bgMusic1.play(); 
+            bgMusic2.play();  
+
+            const showNextImage = () => {
+                if (currentImageIndex < images.length) {
+                    imageSequence.src = images[currentImageIndex];
+                    imageSequence.style.opacity = 1; 
+                    setTimeout(() => {
+                        imageSequence.style.opacity = 0; 
+                    }, 3000); 
+
+                    currentImageIndex++;
+                    setTimeout(showNextImage, 3500); 
+                } else {
+                    imageSequence.style.display = 'none';
+                    document.addEventListener('keydown', moveCharacter);
+                    canInteract = true;
+                }
+            };
+
+            showNextImage();
+        });
+
+       
+        function moveCharacter(event) {
+            switch(event.key) {
+                case 'ArrowUp':
+                    if (charY > 0) charY -= speed;
+                    break;
+                case 'ArrowDown':
+                    if (charY < window.innerHeight - 300) charY += speed; 
+                    break;
+                case 'ArrowLeft':
+                    if (charX > 0) charX -= speed;
+                    break;
+                case 'ArrowRight':
+                    if (charX < window.innerWidth - 300) charX += speed; 
+                    break;
+            }
+            character.style.top = charY + 'px';
+            character.style.left = charX + 'px';
+
+          
+            if (charX >= 450 && charX <= 600 && charY >= window.innerHeight - 600 && charY <= window.innerHeight - 350) {
+                if (event.key === ' ') {
+                    if (canInteract) {
+                        let volumeInterval = setInterval(() => {
+                            if (bgMusic1.volume < 1.0) {
+                                bgMusic1.volume = Math.min(1.0, bgMusic1.volume + 0.05);
+                            } else {
+                                clearInterval(volumeInterval);
+                            }
+                        }, 200);
+                        interaction.style.display = 'none';  
+                    }
+                }
+            }
+
+           
+            if (charX >= 350 && charX <= 500 && charY >= window.innerHeight - 800 && charY <= window.innerHeight - 550) {
+                if (event.key === ' ') {
+                    if (canInteract) {
+                        let volumeInterval2 = setInterval(() => {
+                            if (bgMusic2.volume < 1.0) {
+                                bgMusic2.volume = Math.min(1.0, bgMusic2.volume + 0.05);
+                            } else {
+                                clearInterval(volumeInterval2);
+                            }
+                        }, 200);
+                        interaction2.style.display = 'none'; 
+                    }
+                }
+            }
+
+          
+            if (charX >= 850 && charX <= 1000 && charY >= window.innerHeight - 950 && charY <= window.innerHeight - 600) {
+                if (event.key === ' ') {
+                    if (canInteract) {
+                        gameCanvas.style.backgroundImage = 'url(bg_2.png)';
+                        character.style.backgroundImage = 'url(Chara_2.png)';
+                        setTimeout(() => {
+                            imageSequence.src = 'edimg.png';
+                            imageSequence.style.display = 'block';
+                            imageSequence.style.opacity = 1;  
+                            setTimeout(() => {
+                                restartButton.style.display = 'block';
+                            }, 2000);
+                        }, 2000); 
+                        interaction3.style.display = 'none';  
+                    }
+                }
+            }
+        }
+
+       
+        restartButton.addEventListener('click', () => {
+            location.reload();  
+        });
+    </script>
+
+</body>
+</html>
